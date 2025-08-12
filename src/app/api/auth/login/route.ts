@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { generateToken } from "@/lib/auth";
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 					discordId,
 					username,
 					displayName: displayName || username,
-					rank: "Rookie",
+					rank: "Trainee",
 					department: "EMS",
 					isActive: true,
 					totalHours: 0,

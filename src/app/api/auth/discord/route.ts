@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
 				discordId: discordUser.id,
 				username: discordUser.username,
 				displayName: `${discordUser.username}#${discordUser.discriminator}`,
-				rank: "Rookie",
+				rank: "Trainee",
 				department: "EMS",
 				isActive: true,
 				totalHours: 0,

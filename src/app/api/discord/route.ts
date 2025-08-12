@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 				discordId,
 				username: username || `User_${discordId}`,
 				displayName: username || `User_${discordId}`,
-				rank: "Rookie",
+				rank: "Trainee",
 				department: "EMS",
 				isActive: true,
 				totalHours: 0,
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 				const newAttendance = await clockIn(user.id, user.discordId);
 				return NextResponse.json({
 					success: true,
-					message: `<@${discordId}> berhasil clock in`,
+					message: `<@${discordId}> berhasil on duty`,
 					data: {
 						attendance: newAttendance,
 						user: {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 			} catch {
 				return NextResponse.json({
 					success: false,
-					message: `<@${discordId}> sudah clock in sebelumnya`,
+					message: `<@${discordId}> sudah on duty sebelumnya`,
 					data: {
 						isAlreadyClockedIn: true,
 					},
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
 				return NextResponse.json({
 					success: true,
-					message: `<@${discordId}> berhasil clock out. Durasi kerja: **${durationText}**`,
+					message: `<@${discordId}> berhasil off duty. Durasi kerja: **${durationText}**`,
 					data: {
 						attendance: updatedAttendance,
 						duration: durationText,
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 			} catch {
 				return NextResponse.json({
 					success: false,
-					message: `<@${discordId}> belum clock in`,
+					message: `<@${discordId}> belum on duty`,
 					data: {
 						isNotClockedIn: true,
 					},
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
 							discordId: member.discordId,
 							rank: member.rank,
 							clockInTime: member.clockIn,
-							duration: durationMinutes + " minutes",
+							duration: `${durationMinutes} minutes`,
 						};
 					}),
 					count: activeMembers.length,

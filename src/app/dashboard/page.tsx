@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Calendar24 } from "@/components/ui/date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
 	Clock,
@@ -37,6 +45,94 @@ interface Attendance {
 }
 
 export default function Dashboard() {
+	// State untuk modal edit duty
+	const [editModalOpen, setEditModalOpen] = useState(false);
+	// State untuk edit duty
+	const [editDutyId, setEditDutyId] = useState<number | null>(null);
+	const [editClockInDate, setEditClockInDate] = useState<Date | undefined>(
+		undefined,
+	);
+	const [editClockInTime, setEditClockInTime] = useState<string>("");
+	const [editClockOutDate, setEditClockOutDate] = useState<Date | undefined>(
+		undefined,
+	);
+	const [editClockOutTime, setEditClockOutTime] = useState<string>("");
+	const [editLoading, setEditLoading] = useState(false);
+
+	// Fungsi untuk mulai edit duty
+	const startEditDuty = (attendance: Attendance) => {
+		setEditDutyId(attendance.id);
+		if (attendance.clockIn) {
+			const clockInDateObj = new Date(attendance.clockIn);
+			setEditClockInDate(clockInDateObj);
+			setEditClockInTime(clockInDateObj.toTimeString().slice(0, 8));
+		} else {
+			setEditClockInDate(undefined);
+			setEditClockInTime("");
+		}
+		if (attendance.clockOut) {
+			const clockOutDateObj = new Date(attendance.clockOut);
+			setEditClockOutDate(clockOutDateObj);
+			setEditClockOutTime(clockOutDateObj.toTimeString().slice(0, 8));
+		} else {
+			setEditClockOutDate(undefined);
+			setEditClockOutTime("");
+		}
+		setEditModalOpen(true);
+	};
+
+	// Fungsi untuk simpan perubahan duty
+	const saveEditDuty = async () => {
+		if (!editDutyId) return;
+		setEditLoading(true);
+		try {
+			// Gabungkan date dan time menjadi ISO string
+			let clockInISO = null;
+			let clockOutISO = null;
+			if (editClockInDate && editClockInTime) {
+				const [h, m, s] = editClockInTime.split(":");
+				const d = new Date(editClockInDate);
+				d.setHours(Number(h), Number(m), Number(s));
+				clockInISO = d.toISOString();
+			}
+			if (editClockOutDate && editClockOutTime) {
+				const [h, m, s] = editClockOutTime.split(":");
+				const d = new Date(editClockOutDate);
+				d.setHours(Number(h), Number(m), Number(s));
+				clockOutISO = d.toISOString();
+			}
+			const response = await fetch("/api/attendance/edit", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					id: editDutyId,
+					clockIn: clockInISO,
+					clockOut: clockOutISO,
+				}),
+			});
+			const data = await response.json();
+			if (data.success) {
+				setAttendanceHistory((prev) =>
+					prev.map((att) =>
+						att.id === editDutyId
+							? {
+									...att,
+									clockIn: clockInISO || att.clockIn,
+									clockOut: clockOutISO || att.clockOut,
+								}
+							: att,
+					),
+				);
+				setEditDutyId(null);
+			} else {
+				alert(data.error || "Gagal menyimpan perubahan duty");
+			}
+		} catch (error) {
+			alert("Gagal menyimpan perubahan duty");
+		} finally {
+			setEditLoading(false);
+		}
+	};
 	const [user, setUser] = useState<UserData | null>(null);
 	const [activeAttendance, setActiveAttendance] = useState<Attendance | null>(
 		null,
@@ -139,6 +235,32 @@ export default function Dashboard() {
 		return `${hours}h ${mins}m`;
 	};
 
+	// Hitung total jam pada minggu berjalan (Senin-Minggu)
+	const getWeeklyHours = (history: Attendance[]) => {
+		const now = new Date();
+		// Cari hari Senin minggu ini
+		const dayOfWeek = now.getDay(); // 0 = Minggu, 1 = Senin, ...
+		// Jika hari Minggu (0), maka minggu berjalan mulai dari Senin sebelumnya
+		const monday = new Date(now);
+		monday.setHours(0, 0, 0, 0);
+		if (dayOfWeek === 0) {
+			// Minggu, mundur 6 hari ke Senin
+			monday.setDate(now.getDate() - 6);
+		} else {
+			// Hari lain, mundur ke Senin minggu ini
+			monday.setDate(now.getDate() - (dayOfWeek - 1));
+		}
+		// Minggu depan (untuk batas akhir)
+		const nextMonday = new Date(monday);
+		nextMonday.setDate(monday.getDate() + 7);
+		return history
+			.filter((att) => {
+				const clockInDate = new Date(att.clockIn);
+				return clockInDate >= monday && clockInDate < nextMonday;
+			})
+			.reduce((sum, att) => sum + (att.duration || 0), 0);
+	};
+
 	const fetchAttendanceData = async () => {
 		try {
 			const response = await fetch("/api/attendance");
@@ -217,7 +339,9 @@ export default function Dashboard() {
 						<div className="flex items-center space-x-4">
 							<Activity className="w-8 h-8 text-primary" />
 							<div>
-								<h1 className="text-xl font-bold text-foreground">Beyond EMS</h1>
+								<h1 className="text-xl font-bold text-foreground">
+									Beyond EMS
+								</h1>
 								<p className="text-sm text-muted-foreground">
 									Emergency Medical Services
 								</p>
@@ -244,11 +368,7 @@ export default function Dashboard() {
 									Admin
 								</Button>
 							)}
-							<Button
-								onClick={handleLogout}
-								variant="outline"
-								size="sm"
-							>
+							<Button onClick={handleLogout} variant="outline" size="sm">
 								<LogOut className="w-4 h-4 mr-2" />
 								Logout
 							</Button>
@@ -281,19 +401,21 @@ export default function Dashboard() {
 
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium">Total Jam</CardTitle>
+							<CardTitle className="text-sm font-medium">
+								Total Jam Minggu Ini
+							</CardTitle>
 							<BarChart3 className="w-4 h-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{formatDuration(user.totalHours)}
+								{formatDuration(getWeeklyHours(attendanceHistory))}
 							</div>
 						</CardContent>
 					</Card>
 
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium">Rank</CardTitle>
+							<CardTitle className="text-sm font-medium">Jabatan</CardTitle>
 							<Trophy className="w-4 h-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
@@ -304,7 +426,7 @@ export default function Dashboard() {
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 							<CardTitle className="text-sm font-medium">
-								Shift Bulan Ini
+								Duty Bulan Ini
 							</CardTitle>
 							<Calendar className="w-4 h-4 text-muted-foreground" />
 						</CardHeader>
@@ -322,7 +444,7 @@ export default function Dashboard() {
 						<CardHeader>
 							<CardTitle className="flex items-center">
 								<Clock className="w-5 h-5 mr-2" />
-								Absensi
+								Duty
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
@@ -354,17 +476,17 @@ export default function Dashboard() {
 										variant="destructive"
 									>
 										<LogOut className="w-5 h-5 mr-2" />
-										{isLoading ? "Processing..." : "Clock Out"}
+										{isLoading ? "Processing..." : "Off Duty"}
 									</Button>
 								</div>
 							) : (
 								<div className="space-y-4">
 									<div className="bg-muted border rounded-lg p-4">
 										<h3 className="text-muted-foreground font-medium mb-2">
-											Tidak Sedang Bertugas
+											Tidak Sedang On Duty
 										</h3>
 										<p className="text-muted-foreground text-sm">
-											Klik tombol Clock In untuk memulai shift Anda
+											Klik tombol On Duty untuk memulai duty Anda
 										</p>
 									</div>
 
@@ -374,7 +496,7 @@ export default function Dashboard() {
 										className="w-full"
 									>
 										<LogIn className="w-5 h-5 mr-2" />
-										{isLoading ? "Processing..." : "Clock In"}
+										{isLoading ? "Processing..." : "On Duty"}
 									</Button>
 								</div>
 							)}
@@ -399,13 +521,48 @@ export default function Dashboard() {
 										<div className="flex justify-between items-start">
 											<div className="space-y-1">
 												<p className="font-medium text-sm">
-													Shift #{attendance.id}
+													Duty #{attendance.id}
 												</p>
 												<p className="text-muted-foreground text-xs">
-													{new Date(attendance.clockIn).toLocaleDateString(
-														"id-ID",
-													)}
+													Clock In:{" "}
+													{attendance.clockIn
+														? new Date(attendance.clockIn).toLocaleString(
+																"id-ID",
+																{
+																	hour: "2-digit",
+																	minute: "2-digit",
+																	second: "2-digit",
+																	day: "2-digit",
+																	month: "2-digit",
+																	year: "numeric",
+																},
+															)
+														: "-"}
 												</p>
+												<p className="text-muted-foreground text-xs">
+													Clock Out:{" "}
+													{attendance.clockOut
+														? new Date(attendance.clockOut).toLocaleString(
+																"id-ID",
+																{
+																	hour: "2-digit",
+																	minute: "2-digit",
+																	second: "2-digit",
+																	day: "2-digit",
+																	month: "2-digit",
+																	year: "numeric",
+																},
+															)
+														: "-"}
+												</p>
+												<Button
+													size="sm"
+													variant="outline"
+													className="mt-2"
+													onClick={() => startEditDuty(attendance)}
+												>
+													Edit
+												</Button>
 											</div>
 											<div className="text-right">
 												<p className="text-green-600 text-sm font-medium">
@@ -420,6 +577,101 @@ export default function Dashboard() {
 										</div>
 									</div>
 								))}
+								{/* Modal Edit Duty, hanya satu kali di luar map */}
+								<Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+									<DialogContent>
+										<DialogHeader>
+											<DialogTitle>Edit Duty</DialogTitle>
+										</DialogHeader>
+										<div className="space-y-4">
+											<div>
+												<span className="block text-xs text-muted-foreground mb-1">
+													Clock In:
+												</span>
+												<Calendar24
+													date={editClockInDate}
+													setDate={setEditClockInDate}
+													time={editClockInTime}
+													setTime={setEditClockInTime}
+												/>
+												{editDutyId !== null && (
+													<div className="text-xs text-muted-foreground mt-1">
+														Duty sebelumnya: {(() => {
+															const att = attendanceHistory.find(
+																(a) => a.id === editDutyId,
+															);
+															return att?.clockIn
+																? new Date(att.clockIn).toLocaleString(
+																		"id-ID",
+																		{
+																			hour: "2-digit",
+																			minute: "2-digit",
+																			second: "2-digit",
+																			day: "2-digit",
+																			month: "2-digit",
+																			year: "numeric",
+																		},
+																	)
+																: "-";
+														})()}
+													</div>
+												)}
+											</div>
+											<div>
+												<span className="block text-xs text-muted-foreground mb-1">
+													Clock Out:
+												</span>
+												<Calendar24
+													date={editClockOutDate}
+													setDate={setEditClockOutDate}
+													time={editClockOutTime}
+													setTime={setEditClockOutTime}
+												/>
+												{editDutyId !== null && (
+													<div className="text-xs text-muted-foreground mt-1">
+														Duty sebelumnya: {(() => {
+															const att = attendanceHistory.find(
+																(a) => a.id === editDutyId,
+															);
+															return att?.clockOut
+																? new Date(att.clockOut).toLocaleString(
+																		"id-ID",
+																		{
+																			hour: "2-digit",
+																			minute: "2-digit",
+																			second: "2-digit",
+																			day: "2-digit",
+																			month: "2-digit",
+																			year: "numeric",
+																		},
+																	)
+																: "-";
+														})()}
+													</div>
+												)}
+											</div>
+										</div>
+										<DialogFooter>
+											<Button
+												size="sm"
+												onClick={saveEditDuty}
+												disabled={editLoading}
+											>
+												{editLoading ? "Menyimpan..." : "Simpan"}
+											</Button>
+											<Button
+												size="sm"
+												variant="outline"
+												onClick={() => {
+													setEditDutyId(null);
+													setEditModalOpen(false);
+												}}
+											>
+												Batal
+											</Button>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
 
 								{attendanceHistory.length === 0 && (
 									<div className="text-center text-muted-foreground py-8">
@@ -457,7 +709,9 @@ export default function Dashboard() {
 										- Clock out untuk mengakhiri shift
 									</p>
 									<p className="text-muted-foreground">
-										<code className="bg-muted px-2 py-1 rounded text-xs">!status</code>{" "}
+										<code className="bg-muted px-2 py-1 rounded text-xs">
+											!status
+										</code>{" "}
 										- Cek status absensi Anda
 									</p>
 									<p className="text-muted-foreground">
@@ -467,15 +721,15 @@ export default function Dashboard() {
 										- Top 10 EMS berdasarkan jam kerja
 									</p>
 									<p className="text-muted-foreground">
-										<code className="bg-muted px-2 py-1 rounded text-xs">!active</code>{" "}
+										<code className="bg-muted px-2 py-1 rounded text-xs">
+											!active
+										</code>{" "}
 										- Lihat anggota yang sedang bertugas
 									</p>
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold mb-2">
-									API Endpoints:
-								</h3>
+								<h3 className="text-lg font-semibold mb-2">API Endpoints:</h3>
 								<div className="space-y-2 text-sm">
 									<p className="text-muted-foreground">
 										<code className="bg-muted px-2 py-1 rounded text-xs">

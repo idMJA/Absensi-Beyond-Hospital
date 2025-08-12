@@ -23,10 +23,10 @@ function isAdmin(
 ): boolean {
 	return (
 		user !== null &&
-		(user.isWebAdmin === true || 
-		 user.rank === "Direktur" || 
-		 user.rank === "Wakdir" || 
-		 user.rank === "HRD")
+		(user.isWebAdmin === true ||
+			user.rank === "Direktur" ||
+			user.rank === "Wakdir" ||
+			user.rank === "HRD")
 	);
 }
 

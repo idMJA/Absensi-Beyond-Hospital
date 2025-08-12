@@ -262,7 +262,9 @@ export default function AdminPage() {
 
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium">Active Users</CardTitle>
+							<CardTitle className="text-sm font-medium">
+								Active Users
+							</CardTitle>
 							<CheckCircle className="w-4 h-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
@@ -409,7 +411,8 @@ export default function AdminPage() {
 																	className="w-full p-2 border border-input rounded-md bg-background text-foreground"
 																/>
 																<p className="text-xs text-muted-foreground mt-1">
-																	Jika diisi, nama ini akan ditampilkan menggantikan nama Discord
+																	Jika diisi, nama ini akan ditampilkan
+																	menggantikan nama Discord
 																</p>
 															</div>
 
@@ -433,14 +436,28 @@ export default function AdminPage() {
 																		<SelectValue />
 																	</SelectTrigger>
 																	<SelectContent>
-																		<SelectItem value="Direktur">Direktur</SelectItem>
-																		<SelectItem value="Wakdir">Wakdir</SelectItem>
+																		<SelectItem value="Direktur">
+																			Direktur
+																		</SelectItem>
+																		<SelectItem value="Wakdir">
+																			Wakdir
+																		</SelectItem>
 																		<SelectItem value="HRD">HRD</SelectItem>
-																		<SelectItem value="Sekretaris">Sekretaris</SelectItem>
-																		<SelectItem value="Dokter Spesialis">Dokter Spesialis</SelectItem>
-																		<SelectItem value="Dokter Umum">Dokter Umum</SelectItem>
-																		<SelectItem value="Perawat">Perawat</SelectItem>
-																		<SelectItem value="Trainee">Trainee</SelectItem>
+																		<SelectItem value="Sekretaris">
+																			Sekretaris
+																		</SelectItem>
+																		<SelectItem value="Dokter Spesialis">
+																			Dokter Spesialis
+																		</SelectItem>
+																		<SelectItem value="Dokter Umum">
+																			Dokter Umum
+																		</SelectItem>
+																		<SelectItem value="Perawat">
+																			Perawat
+																		</SelectItem>
+																		<SelectItem value="Trainee">
+																			Trainee
+																		</SelectItem>
 																	</SelectContent>
 																</Select>
 															</div>

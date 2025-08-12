@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	LogIn,
-	Activity,
-} from "lucide-react";
+import { LogIn, Activity } from "lucide-react";
 
 export default function Home() {
 	const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +48,9 @@ export default function Home() {
 			<div className="min-h-screen bg-background flex items-center justify-center">
 				<div className="text-center">
 					<Activity className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
-					<p className="text-muted-foreground text-lg">Checking authentication...</p>
+					<p className="text-muted-foreground text-lg">
+						Checking authentication...
+					</p>
 				</div>
 			</div>
 		);
