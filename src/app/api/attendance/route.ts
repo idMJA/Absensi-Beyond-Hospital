@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 import {
 	clockIn,
 	clockOut,
-	getUserAttendanceHistory,
+	getUserById,
 	getActiveAttendance,
+	getUserAttendanceHistory,
 } from "@/db";
 
 // Helper function to get user from session
@@ -84,9 +85,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
 	try {
-		const user = await getUserFromSession(request);
-		if (!user) {
+		const sessionUser = await getUserFromSession(request);
+		if (!sessionUser) {
 			return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+		}
+
+		// Always fetch the latest user data from DB
+		const user = await getUserById(sessionUser.id);
+		if (!user) {
+			return NextResponse.json({ error: "User not found" }, { status: 404 });
 		}
 
 		const { searchParams } = new URL(request.url);

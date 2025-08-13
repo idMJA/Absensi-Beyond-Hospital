@@ -1,7 +1,10 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+	throw new Error("JWT_SECRET environment variable is not defined");
+}
 
 export interface JWTPayload {
 	userId: number;
@@ -44,7 +47,10 @@ export const comparePassword = async (
 };
 
 export const generateDiscordAuthURL = (): string => {
-	const clientId = process.env.DISCORD_CLIENT_ID!;
+	const clientId = process.env.DISCORD_CLIENT_ID;
+	if (!clientId) {
+		throw new Error("DISCORD_CLIENT_ID environment variable is not defined");
+	}
 	const redirectUri = encodeURIComponent(
 		`${process.env.NEXT_PUBLIC_APP_URL}/auth/discord/callback`,
 	);

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
 	try {
-		const { discordId, username, displayName, email } = await request.json();
+		const { discordId, username, displayName } = await request.json();
 
 		if (!discordId || !username) {
 			return NextResponse.json(
