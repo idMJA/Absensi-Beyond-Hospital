@@ -27,15 +27,15 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
-	Shield,
 	Users,
 	Edit3,
 	CheckCircle,
 	XCircle,
 	UserCog,
-	ArrowLeft,
 	Activity,
+	Shield,
 } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
 
 interface User {
 	id: number;
@@ -55,7 +55,6 @@ export default function AdminPage() {
 	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [editingUser, setEditingUser] = useState<User | null>(null);
-	const [currentUser, setCurrentUser] = useState<User | null>(null);
 	const [stats, setStats] = useState({
 		totalUsers: 0,
 		activeUsers: 0,
@@ -75,8 +74,6 @@ export default function AdminPage() {
 						window.location.href = "/";
 						return;
 					}
-
-					setCurrentUser(authData.user);
 
 					// Check if user is admin
 					if (
@@ -205,47 +202,8 @@ export default function AdminPage() {
 
 	return (
 		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<header className="border-b">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center py-4">
-						<div className="flex items-center space-x-4">
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => {
-									window.location.href = "/dashboard";
-								}}
-								className="text-muted-foreground hover:text-foreground"
-							>
-								<ArrowLeft className="w-4 h-4 mr-2" />
-								Back to Dashboard
-							</Button>
-							<div className="flex items-center space-x-2">
-								<Shield className="w-6 h-6 text-primary" />
-								<div>
-									<h1 className="text-xl font-bold text-foreground">
-										Admin Panel
-									</h1>
-									<p className="text-sm text-muted-foreground">
-										User Management
-									</p>
-								</div>
-							</div>
-						</div>
-						{currentUser && (
-							<div className="text-right">
-								<p className="text-sm font-medium text-foreground">
-									{currentUser.displayName}
-								</p>
-								<p className="text-xs text-muted-foreground">
-									{currentUser.rank} • Admin
-								</p>
-							</div>
-						)}
-					</div>
-				</div>
-			</header>
+			{/* Navbar */}
+			<Navbar showBackButton={true} />
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{/* Stats Cards */}

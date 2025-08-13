@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import {
 	Clock,
@@ -127,7 +128,7 @@ export default function Dashboard() {
 			} else {
 				alert(data.error || "Gagal menyimpan perubahan duty");
 			}
-		} catch (error) {
+		} catch {
 			alert("Gagal menyimpan perubahan duty");
 		} finally {
 			setEditLoading(false);
@@ -140,26 +141,6 @@ export default function Dashboard() {
 	const [attendanceHistory, setAttendanceHistory] = useState<Attendance[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
-
-	const handleLogout = async () => {
-		setIsLoading(true);
-		try {
-			// Call logout API
-			await fetch("/api/auth/discord", { method: "POST" });
-
-			// Clear local state
-			setUser(null);
-			setActiveAttendance(null);
-			setAttendanceHistory([]);
-
-			// Redirect to login
-			window.location.href = "/";
-		} catch (error) {
-			console.error("Logout error:", error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
 	const handleClockIn = async () => {
 		setIsLoading(true);
@@ -332,50 +313,8 @@ export default function Dashboard() {
 
 	return (
 		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<header className="border-b">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center py-4">
-						<div className="flex items-center space-x-4">
-							<Activity className="w-8 h-8 text-primary" />
-							<div>
-								<h1 className="text-xl font-bold text-foreground">
-									Beyond EMS
-								</h1>
-								<p className="text-sm text-muted-foreground">
-									Emergency Medical Services
-								</p>
-							</div>
-						</div>
-
-						<div className="flex items-center space-x-4">
-							<div className="text-right">
-								<p className="text-foreground font-medium">
-									{user.customName || user.displayName}
-								</p>
-								<p className="text-sm text-muted-foreground">
-									{user.rank} • {user.department}
-								</p>
-							</div>
-							{user.isWebAdmin && (
-								<Button
-									onClick={() => {
-										window.location.href = "/admin";
-									}}
-									variant="outline"
-									size="sm"
-								>
-									Admin
-								</Button>
-							)}
-							<Button onClick={handleLogout} variant="outline" size="sm">
-								<LogOut className="w-4 h-4 mr-2" />
-								Logout
-							</Button>
-						</div>
-					</div>
-				</div>
-			</header>
+			{/* Navbar */}
+			<Navbar />
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{/* Status Cards */}
