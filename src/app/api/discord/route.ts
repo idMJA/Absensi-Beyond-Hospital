@@ -14,7 +14,7 @@ import {
 // Middleware untuk memverifikasi Discord bot token
 function verifyBotToken(request: NextRequest): boolean {
 	const botToken = request.headers.get("x-bot-token");
-	return botToken === process.env.DISCORD_BOT_TOKEN;
+	return botToken === process.env.DISCORD_AUTH_API;
 }
 
 export async function POST(request: NextRequest) {
